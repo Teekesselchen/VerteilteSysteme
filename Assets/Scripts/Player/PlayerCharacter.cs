@@ -14,8 +14,11 @@ public class PlayerCharacter : NetworkBehaviour
     [Header("Stats")]
     public float speed = 5;
     public int health = 100;
-    // Start is called before the first frame update
 
+    [Header("Components")]
+    public Weapon weapon;
+
+    // Start is called before the first frame update
     void Start()
     {
         cc = GetComponent<CharacterController>();
@@ -38,13 +41,15 @@ public class PlayerCharacter : NetworkBehaviour
     }
 
 
+
+
     // Update is called once per frame
     void Update()
     {
         
     }
 
-    //[Command]
+    [Command]
     public void CmdMove(Vector2 direction)
     {
         if (!anim)
@@ -70,14 +75,10 @@ public class PlayerCharacter : NetworkBehaviour
             anim.SetFloat("Speed", currentSpeed);
             anim.SetFloat("Direction", angle);
             cc.Move(worldDirection * currentSpeed * Time.deltaTime);
-            //Debug.Log("Direction: " + angle);
-            //Debug.Log("Speed: " + currentSpeed);
-            //Debug.Log("Side: " + sidefactor);
         }
-        
     }
 
-    //[Command]
+    [Command]
     public void CmdTurn(Vector2 direction) {
         Vector3 worldDirection = new Vector3(
                 direction.x,
@@ -85,6 +86,12 @@ public class PlayerCharacter : NetworkBehaviour
                 direction.y
         );
         transform.LookAt(transform.position + worldDirection);
+    }
+
+    [Command]
+    public void CmdShoot()
+    {
+        weapon.shoot();
     }
 
     [ClientRpc]

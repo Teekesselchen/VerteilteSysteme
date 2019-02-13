@@ -8,7 +8,6 @@ public class PlayerController : MonoBehaviour {
     public PlayerCharacter character;
     public TouchJoystick movementStick;
     public TouchJoystick aimStick;
-    public WeaponContainer weapon;
     public CameraFollow camera;
 
     void Awake()
@@ -45,7 +44,7 @@ public class PlayerController : MonoBehaviour {
         if (aimStick.currentlyActive) {
             Vector2 shotDirection = aimStick.DragDirection;
             character.CmdTurn(shotDirection);
-            weapon.shoot();
+            character.CmdShoot();
         }
     }
 

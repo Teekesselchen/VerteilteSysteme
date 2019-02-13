@@ -6122,6 +6122,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 5
   health: 100
+  weapon: {fileID: 222880141583086121}
 --- !u!114 &7588265522965230709
 MonoBehaviour:
   m_ObjectHideFlags: 0
