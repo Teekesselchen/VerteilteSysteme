@@ -3,14 +3,23 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour {
+    public static PlayerController instance;
+    [Header("Prefabs")]
     public PlayerCharacter character;
     public TouchJoystick movementStick;
     public TouchJoystick aimStick;
     public WeaponContainer weapon;
+    public CameraFollow camera;
 
-	// Use this for initialization
-	void Start () {
-        
+    void Awake()
+    {
+        instance = this;
+    }
+
+    // Use this for initialization
+    void Start () {
+        //character = PlayerCharacter.localInstance;
+        //Debug.Log("PlayerCharacter: "+character);
 	}
 	
 	// Update is called once per frame
@@ -19,17 +28,23 @@ public class PlayerController : MonoBehaviour {
         shoot();
     }
 
+    public void setPlayerCharacter(PlayerCharacter c)
+    {
+        this.character = c;
+        camera.toFollow = c.gameObject;
+    }
+
     private void move()
     {
         Vector2 movementDirection = movementStick.DragDirection;
-        character.move(movementDirection);
+        character.CmdMove(movementDirection);
     }
 
     private void shoot()
     {
         if (aimStick.currentlyActive) {
             Vector2 shotDirection = aimStick.DragDirection;
-            character.turn(shotDirection);
+            character.CmdTurn(shotDirection);
             weapon.shoot();
         }
     }

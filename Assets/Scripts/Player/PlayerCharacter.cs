@@ -1,22 +1,42 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(Animator))]
-public class PlayerCharacter : MonoBehaviour  
+public class PlayerCharacter : NetworkBehaviour
 {
+    //public static PlayerCharacter localInstance;
     CharacterController cc;
     Animator anim;
 
-    [Header("Movement")]
+    [Header("Stats")]
     public float speed = 5;
+    public int health = 100;
     // Start is called before the first frame update
+
     void Start()
     {
         cc = GetComponent<CharacterController>();
         this.anim = GetComponent<Animator>();
+        if (isLocalPlayer)
+        {
+            //localInstance = this;
+            PlayerController c = PlayerController.instance;
+            if(c != null)
+            {
+                c.setPlayerCharacter(this);
+                Debug.Log("Local Instance Set in Start.");
+            }
+            
+        }
+        else
+        {
+            Debug.Log("I am not local player in Start?");
+        }
     }
+
 
     // Update is called once per frame
     void Update()
@@ -24,9 +44,11 @@ public class PlayerCharacter : MonoBehaviour
         
     }
 
-    public void move(Vector2 direction)
+    //[Command]
+    public void CmdMove(Vector2 direction)
     {
-        
+        if (!anim)
+            return;
         if (direction.magnitude == 0)
         {
             anim.SetFloat("Speed", 0);
@@ -55,12 +77,27 @@ public class PlayerCharacter : MonoBehaviour
         
     }
 
-    public void turn(Vector2 direction) {
+    //[Command]
+    public void CmdTurn(Vector2 direction) {
         Vector3 worldDirection = new Vector3(
                 direction.x,
                 0,
                 direction.y
         );
         transform.LookAt(transform.position + worldDirection);
+    }
+
+    [ClientRpc]
+    void RpcHealth(int change) {
+        Debug.Log("Change Health: " + change);
+    }
+
+    public void ChangeHealth(int change) {
+        if (!isServer) {
+            return;
+        }
+
+        health += change;
+        RpcHealth(change);
     }
 }
