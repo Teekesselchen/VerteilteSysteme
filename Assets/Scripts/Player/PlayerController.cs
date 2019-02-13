@@ -23,8 +23,11 @@ public class PlayerController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        move();
-        shoot();
+        if (character != null)
+        {
+            move();
+            shoot();
+        }
     }
 
     public void setPlayerCharacter(PlayerCharacter c)

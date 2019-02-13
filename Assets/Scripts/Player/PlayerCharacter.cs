@@ -7,7 +7,6 @@ using UnityEngine.Networking;
 [RequireComponent(typeof(Animator))]
 public class PlayerCharacter : NetworkBehaviour
 {
-    //public static PlayerCharacter localInstance;
     CharacterController cc;
     Animator anim;
 
@@ -25,7 +24,6 @@ public class PlayerCharacter : NetworkBehaviour
         this.anim = GetComponent<Animator>();
         if (isLocalPlayer)
         {
-            //localInstance = this;
             PlayerController c = PlayerController.instance;
             if(c != null)
             {
