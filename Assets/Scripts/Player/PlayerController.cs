@@ -1,24 +1,25 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour {
-    public static PlayerController instance;
+    //public static PlayerController instance;
     [Header("Prefabs")]
     public PlayerCharacter character;
     public TouchJoystick movementStick;
     public TouchJoystick aimStick;
     public CameraFollow camera;
+    public Slider healthbar;
 
     void Awake()
     {
-        instance = this;
+        //instance = this;
     }
 
     // Use this for initialization
     void Start () {
-        //character = PlayerCharacter.localInstance;
-        //Debug.Log("PlayerCharacter: "+character);
+
 	}
 	
 	// Update is called once per frame
@@ -27,6 +28,7 @@ public class PlayerController : MonoBehaviour {
         {
             move();
             shoot();
+            setHealthbar();
         }
     }
 
@@ -39,7 +41,7 @@ public class PlayerController : MonoBehaviour {
     private void move()
     {
         Vector2 movementDirection = movementStick.DragDirection;
-        character.CmdMove(movementDirection);
+        character.move(movementDirection);
     }
 
     private void shoot()
@@ -49,6 +51,11 @@ public class PlayerController : MonoBehaviour {
             character.CmdTurn(shotDirection);
             character.CmdShoot();
         }
+    }
+
+    private void setHealthbar()
+    {
+        healthbar.normalizedValue = character.getRelativeHealth();
     }
 
     Vector2 getKeyboardMovement() {

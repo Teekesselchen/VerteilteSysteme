@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Networking;
 
 [RequireComponent(typeof(CharacterController))]
@@ -13,28 +11,36 @@ public class PlayerCharacter : NetworkBehaviour
     [Header("Stats")]
     public float speed = 5;
     public int health = 100;
+    private int startingHealth;
 
     [Header("Components")]
     public Weapon weapon;
+    public GameObject controllerPrefab;
+    public GameObject serverCameraPrefab;
 
     // Start is called before the first frame update
     void Start()
     {
         cc = GetComponent<CharacterController>();
         this.anim = GetComponent<Animator>();
+        startingHealth = health;
         if (isLocalPlayer)
         {
-            PlayerController c = PlayerController.instance;
-            if(c != null)
+            Debug.Log("Client: "+isClient);
+            Debug.Log("Server: " + isServer);
+            if (isServer)
             {
-                c.setPlayerCharacter(this);
-                Debug.Log("Local Instance Set in Start.");
+                GameObject.Instantiate(serverCameraPrefab);
+                Destroy(gameObject);
+            } else
+            {
+                GameObject controller = GameObject.Instantiate(controllerPrefab);
+                PlayerController pc = controller.GetComponent<PlayerController>();
+                if (pc)
+                {
+                    pc.setPlayerCharacter(this);
+                }
             }
-            
-        }
-        else
-        {
-            Debug.Log("I am not local player in Start?");
         }
     }
 
@@ -47,8 +53,7 @@ public class PlayerCharacter : NetworkBehaviour
         
     }
 
-    [Command]
-    public void CmdMove(Vector2 direction)
+    public void move(Vector2 direction)
     {
         if (!anim)
             return;
@@ -72,8 +77,14 @@ public class PlayerCharacter : NetworkBehaviour
             float angle = (1 - Vector3.Dot(worldDirection, transform.forward)) * sidefactor;
             anim.SetFloat("Speed", currentSpeed);
             anim.SetFloat("Direction", angle);
-            cc.Move(worldDirection * currentSpeed * Time.deltaTime);
+            CmdMove(worldDirection * currentSpeed * Time.deltaTime);
         }
+    }
+
+    [Command]
+    void CmdMove(Vector3 mv)
+    {
+        cc.Move(mv);
     }
 
     [Command]
@@ -94,15 +105,18 @@ public class PlayerCharacter : NetworkBehaviour
 
     [ClientRpc]
     void RpcHealth(int change) {
-        Debug.Log("Change Health: " + change);
+        health += change;
     }
 
     public void ChangeHealth(int change) {
-        if (!isServer) {
-            return;
+        if (isServer) {
+            health += change;
+            RpcHealth(change);
         }
+    }
 
-        health += change;
-        RpcHealth(change);
+    public float getRelativeHealth()
+    {
+        return health/startingHealth;
     }
 }

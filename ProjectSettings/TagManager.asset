@@ -15,8 +15,8 @@ TagManager:
   - 
   - PostProcessing
   - PlayerCharacter
-  - PlayerRestraint
-  - 
+  - PlayerCollider
+  - Bullet
   - 
   - 
   - 
