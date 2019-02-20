@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
-public class Landmine : MonoBehaviour
+public class Landmine : NetworkBehaviour
 {
     public float beepPeriod = 2.0f;
     public float armTime = 1.0f;
@@ -29,49 +30,77 @@ public class Landmine : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!armed)
+        if (isServer)
         {
-            foreach (PlayerCharacter c in nearbyCharacters) {
-                float dist = Vector3.Distance(transform.position, c.transform.position);
-                if (dist <= armingRadius)
-                {
-                    armed = true;
-                    ttl = armTime;
-                }
-            }
-            
+            checkActivation();
         }
-        else
+        setLightIntensity();
+    }
+
+    private void setLightIntensity()
+    {
+        if(armed)
         {
-            if (ttl > 0)
+            if(ttl > 0)
             {
                 currentBeepPeriod = beepPeriod * ttl;
                 ttl -= Time.deltaTime;
             } else
             {
-                foreach (PlayerCharacter c in nearbyCharacters)
-                {
-                    float dist = Vector3.Distance(transform.position, c.transform.position);
-                    if (dist <= damageRadius)
-                    {
-                        float dmg = this.damage * (dist / damageRadius);
-                        c.ChangeHealth(-(int)dmg);
-                    }
-                }
                 GameObject e = GameObject.Instantiate<GameObject>(explosion, transform.position, transform.rotation, null);
                 Destroy(gameObject);
                 Destroy(e, 1.0f);
             }
+            
         }
         l.intensity = lightIntensityInitial * Mathf.Abs(Mathf.Cos(Mathf.PI * Time.time / currentBeepPeriod));
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void checkActivation()
     {
-        PlayerCharacter c = other.GetComponent<PlayerCharacter>();
-        if(c != null)
+        if (!armed)
         {
-            nearbyCharacters.Add(c);
+            foreach (PlayerCharacter c in nearbyCharacters)
+            {
+                float dist = Vector3.Distance(transform.position, c.transform.position);
+                if (dist <= armingRadius)
+                {
+                    armed = true;
+                    ttl = armTime;
+                    RpcActivate();
+                }
+            }
+        } else if (ttl <= 0)
+        {
+            foreach (PlayerCharacter c in nearbyCharacters)
+            {
+                float dist = Vector3.Distance(transform.position, c.transform.position);
+                if (dist <= damageRadius)
+                {
+                    float dmg = this.damage * (dist / damageRadius);
+                    c.ChangeHealth(-(int)dmg);
+                }
+            }
         }
     }
+
+    [ClientRpc]
+    public void RpcActivate()
+    {
+        armed = true;
+        ttl = armTime;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (isServer)
+        {
+            PlayerCharacter c = other.GetComponent<PlayerCharacter>();
+            if (c != null && !nearbyCharacters.Contains(c))
+            {
+                nearbyCharacters.Add(c);
+            }
+        }
+    }
+        
 }

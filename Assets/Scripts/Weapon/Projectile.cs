@@ -9,41 +9,69 @@ public class Projectile : NetworkBehaviour
     public float lifetime = 5.0f;
     public int damage = 10;
     private float deathtime;
+    private int shooterId;
 
     // Start is called before the first frame update
     void Start()
     {
-        deathtime = Time.time + lifetime;
-        //Debug.Log("Deathtime: " + deathtime + " Time: " + Time.time);
+        
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+      /*if (isServer)
+      {
+          if (deathtime <= Time.time)
+          {
+              NetworkServer.Destroy(gameObject);
+          }
+      }*/
     }
 
     private void FixedUpdate()
     {
-        transform.Translate(new Vector3(0, 0, speed * Time.deltaTime), Space.Self);
-        if (deathtime <= Time.time)
+        if (isServer)
         {
-            Destroy(gameObject);
+            transform.Translate(transform.forward * speed * Time.fixedDeltaTime, Space.World);
+            if (deathtime <= Time.time)
+            {
+                NetworkServer.Destroy(gameObject);
+            }
         }
     }
 
     private void OnCollisionEnter(Collision collision)
     {
+        
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        Debug.Log("Bullet Collision with " + other.gameObject + " on server? " + isServer);
         if (isServer)
         {
-            PlayerCharacter target = collision.collider.GetComponent<PlayerCharacter>();
+            PlayerCharacter target = other.gameObject.GetComponent<PlayerCharacter>();
             if (target != null)
             {
-                target.ChangeHealth(-damage);
+                if (target.getPlayerId() != shooterId)
+                {
+                    target.ChangeHealth(-damage, shooterId);
+                    Debug.Log("Player " + target.getPlayerId() + " hit by " + shooterId);
+                    NetworkServer.Destroy(gameObject);
+                }
+                
+            } else
+            {
+                NetworkServer.Destroy(gameObject);
             }
         }
-        Destroy(gameObject);
     }
 
 
+    public void initProjectile(int shooterId)
+    {
+        this.shooterId = shooterId;
+        deathtime = Time.time + lifetime;
+    }
 }

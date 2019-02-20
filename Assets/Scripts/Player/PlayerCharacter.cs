@@ -8,6 +8,11 @@ public class PlayerCharacter : NetworkBehaviour
     CharacterController cc;
     Animator anim;
 
+    //player stats
+    int playerId = -1;
+    int playerKills = 0;
+    int playerDeaths = 0;
+
     [Header("Stats")]
     public float speed = 5;
     public int health = 100;
@@ -41,11 +46,15 @@ public class PlayerCharacter : NetworkBehaviour
                     pc.setPlayerCharacter(this);
                 }
             }
+        } else
+        {
+            if (isServer)
+            {
+                playerId = Spawn.Instance.registerPlayer(this);
+                weapon.setPlayerId(playerId);
+            }
         }
     }
-
-
-
 
     // Update is called once per frame
     void Update()
@@ -97,26 +106,58 @@ public class PlayerCharacter : NetworkBehaviour
         transform.LookAt(transform.position + worldDirection);
     }
 
+
     [Command]
     public void CmdShoot()
     {
-        weapon.shoot();
+        GameObject projectile = weapon.shoot();
+        if (projectile != null)
+        {
+            NetworkServer.Spawn(projectile);
+        }
     }
 
     [ClientRpc]
-    void RpcHealth(int change) {
-        health += change;
+    void RpcHealth(int hp) {
+        health = hp;
     }
 
-    public void ChangeHealth(int change) {
+    public void ChangeHealth(int change, int attackerId = -1) {
         if (isServer) {
             health += change;
-            RpcHealth(change);
+            RpcHealth(health);
+            Debug.Log(playerId+" changed health by "+change+" to "+health);
+            if(health <= 0)
+            {
+                playerDeaths++;
+                health = startingHealth;
+                Spawn.Instance.killPlayer(playerId, attackerId);
+            }
         }
     }
 
     public float getRelativeHealth()
     {
-        return health/startingHealth;
+        return (float)health/(float)startingHealth;
+    }
+
+    public void creditKill()
+    {
+        ++playerKills;
+    }
+
+    public int getKills()
+    {
+        return playerKills;
+    }
+
+    public int getDeaths()
+    {
+        return playerDeaths;
+    }
+
+    public int getPlayerId()
+    {
+        return playerId;
     }
 }
