@@ -21,7 +21,6 @@ public class PlayerCharacter : NetworkBehaviour
     [Header("Components")]
     public Weapon weapon;
     public GameObject controllerPrefab;
-    public GameObject serverCameraPrefab;
 
     // Start is called before the first frame update
     void Start()
@@ -35,7 +34,6 @@ public class PlayerCharacter : NetworkBehaviour
             Debug.Log("Server: " + isServer);
             if (isServer)
             {
-                GameObject.Instantiate(serverCameraPrefab);
                 Destroy(gameObject);
             } else
             {
@@ -59,8 +57,25 @@ public class PlayerCharacter : NetworkBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
+
+    private void OnDestroy()
+    {
+        if (isServer)
+        {
+            Spawn.Instance.deregisterPlayer(playerId);
+        }
+    }
+
+    public override void OnNetworkDestroy()
+    {
+        if (isServer)
+        {
+            Spawn.Instance.deregisterPlayer(playerId);
+        }
+    }
+
 
     public void move(Vector2 direction)
     {
@@ -131,6 +146,7 @@ public class PlayerCharacter : NetworkBehaviour
             {
                 playerDeaths++;
                 health = startingHealth;
+                RpcHealth(startingHealth);
                 Spawn.Instance.killPlayer(playerId, attackerId);
             }
         }

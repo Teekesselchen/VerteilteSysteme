@@ -4,9 +4,13 @@ using UnityEngine;
 
 public class Spawn : MonoBehaviour
 {
+    const int MAXPLAYERS = 4;
     public static Spawn Instance { get; private set; }
     public Transform[] spawns;
-    List<PlayerCharacter> players = new List<PlayerCharacter>();
+    public Scorepanel[] scores;
+
+    PlayerCharacter[] players = new PlayerCharacter[MAXPLAYERS];
+    
 
     private void Awake()
     {
@@ -17,7 +21,9 @@ public class Spawn : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        foreach(Scorepanel sp in scores){
+            sp.gameObject.SetActive(false);
+        }
     }
 
     // Update is called once per frame
@@ -28,11 +34,30 @@ public class Spawn : MonoBehaviour
 
     public int registerPlayer(PlayerCharacter p)
     {
-        players.Add(p);
-        int id = players.Count - 1;
-        Debug.Log("Added player id "+ id);
-        spawnPlayer(id);
-        return id;
+        for (int i = 0; i< MAXPLAYERS; ++i)
+        {
+            if (players[i] == null)
+            {
+                players[i] = p;
+                Debug.Log("Added player id " + i);
+                spawnPlayer(i);
+                scores[i].gameObject.SetActive(true);
+                scores[i].setScore(0 , 0);
+                return i;
+            }
+        }
+        Debug.LogError("Error: Too many players");
+        return -1;
+    }
+
+    public void deregisterPlayer(int id)
+    {
+        if (id >= 0)
+        {
+            players[id] = null;
+            scores[id].gameObject.SetActive(false);
+            Debug.Log("Removed player id " + id);
+        }
     }
 
     void spawnPlayer(int i)
@@ -47,8 +72,12 @@ public class Spawn : MonoBehaviour
     {
         if(attackerId >= 0)
         {
-            players[attackerId].creditKill();
+            PlayerCharacter attackerCharacter = players[attackerId];
+            attackerCharacter.creditKill();
+            scores[attackerId].setScore(attackerCharacter.getKills(), attackerCharacter.getDeaths());
         }
+        PlayerCharacter deadCharacter = players[deadPlayer];
+        scores[deadPlayer].setScore(deadCharacter.getKills(), deadCharacter.getDeaths());
         spawnPlayer(deadPlayer);
     }
 }

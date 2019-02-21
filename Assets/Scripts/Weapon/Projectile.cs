@@ -48,7 +48,7 @@ public class Projectile : NetworkBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Bullet Collision with " + other.gameObject + " on server? " + isServer);
+        //Debug.Log("Bullet Collision with " + other.gameObject + " on server? " + isServer);
         if (isServer)
         {
             PlayerCharacter target = other.gameObject.GetComponent<PlayerCharacter>();
